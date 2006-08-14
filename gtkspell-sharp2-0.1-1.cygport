@@ -1,0 +1,5 @@
+inherit mono
+
+DESCRIPTION="Mono GtkSpell bindings"
+SRC_URI="http://svn.myrealbox.com/viewcvs/trunk/${PN%2}.tar.gz"
+SRC_DIR="${PN%2}"

@@ -1,0 +1,72 @@
+gtkspell-sharp2
+------------------------------------------
+Mono GtkSpell bindings
+
+Runtime requirements:
+  cygwin-1.5.21-1
+  gtk-sharp2-2.8.3-1
+  gtkspell-2.0.11-2
+  mono-1.1.16.1-1
+
+Build requirements:
+(besides corresponding -devel packages)
+  cygwin-1.5.21-1
+  autoconf2.5-2.59-2
+  automake1.9-1.9.6-1
+  binutils-20050610-1
+  cygport-0.2.5-1
+  gawk-3.1.5-2
+  gcc-core-3.4.4-1
+  make-3.81-1
+  monodoc-1.1.16-1
+  pkg-config-0.20-1
+  sed-4.1.5-1
+
+Canonical website:
+  http://www.mono-project.com/
+
+Canonical download:
+  http://svn.myrealbox.com/viewcvs/trunk/gtkspell-sharp
+
+-------------------------------------------
+
+Build instructions:
+  unpack gtkspell-sharp2-0.1-X-src.tar.bz2
+    if you use setup to install this src package, it will be
+	 unpacked under /usr/src automatically
+  cd /usr/src
+  cygport ./gtkspell-sharp2-0.1-X.cygport all
+
+This will create:
+  /usr/src/gtkspell-sharp2-0.1-X-src.tar.bz2
+  /usr/src/gtkspell-sharp2-0.1-X.tar.bz2
+
+-------------------------------------------
+
+Files included in the binary package:
+
+  /usr/lib/mono/gac/gtkspell-sharp/2.0.0.0__1d20cd83d42ab28e/gtkspell-sharp.dll
+  /usr/lib/mono/gac/gtkspell-sharp/2.0.0.0__1d20cd83d42ab28e/gtkspell-sharp.dll.config
+  /usr/lib/mono/gtkspell-sharp-2.0/gtkspell-sharp.dll
+  /usr/lib/monodoc/sources/gtkspell-sharp-docs.source
+  /usr/lib/monodoc/sources/gtkspell-sharp-docs.tree
+  /usr/lib/monodoc/sources/gtkspell-sharp-docs.zip
+  /usr/lib/pkgconfig/gtkspell-sharp-2.0.pc
+  /usr/share/doc/Cygwin/gtkspell-sharp2-0.1.README
+  /usr/share/doc/gtkspell-sharp2-0.1/AUTHORS
+  /usr/share/doc/gtkspell-sharp2-0.1/COPYING
+  /usr/share/doc/gtkspell-sharp2-0.1/ChangeLog
+  /usr/share/doc/gtkspell-sharp2-0.1/INSTALL
+  /usr/share/doc/gtkspell-sharp2-0.1/README
+  /usr/share/gapi-2.0/gtkspell-api.xml
+
+------------------
+
+Port Notes:
+
+----- version 0.1-1 -----
+Initial release for Cygwin.
+
+
+Cygwin port maintained by:
+http://cygwinports.dotsrc.org/

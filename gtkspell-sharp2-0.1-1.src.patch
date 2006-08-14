@@ -1,0 +1,420 @@
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/Makefile.am src/gtkspell-sharp/Makefile.am
+--- origsrc/gtkspell-sharp/Makefile.am	2005-03-24 00:27:20.000000000 -0600
++++ src/gtkspell-sharp/Makefile.am	2006-08-13 19:40:13.936000000 -0500
+@@ -1,4 +1,4 @@
+-SUBDIRS = gtkspell
++SUBDIRS = gtkspell sample docs
+ 
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = gtkspell-sharp-2.0.pc
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/configure.in src/gtkspell-sharp/configure.in
+--- origsrc/gtkspell-sharp/configure.in	2005-03-26 15:21:06.000000000 -0600
++++ src/gtkspell-sharp/configure.in	2006-08-13 19:45:17.292500000 -0500
+@@ -55,25 +55,37 @@
+ if test "x$has_mono" = "xtrue"; then
+ AC_PATH_PROG(RUNTIME, mono, no)
+ AC_PATH_PROG(CSC, mcs, no)
+-if test `uname -s` = "Darwin"; then
+-	LIB_PREFIX=
++case `uname -s` in
++  Darwin)
++	LIB_PREFIX=lib
++	LIB_SONAME=.
+ 	LIB_SUFFIX=.dylib
+-else
+-	LIB_PREFIX=.so
++	;;
++  CYGWIN*)
++	LIB_PREFIX=cyg
++	LIB_SONAME=-
++	LIB_SUFFIX=.dll
++	;;
++  *)
++	LIB_PREFIX=lib
++	LIB_SONAME=.so.
+ 	LIB_SUFFIX=
+-fi
++	;;
++esac
+ else
+ AC_PATH_PROG(CSC, csc.exe, no)
+ if test x$CSC = "xno"; then
+ 	AC_MSG_ERROR([You need to install either mono or .Net])
+ else
+ RUNTIME=
+-LIB_PREFIX=
++LIB_PREFIX=lib
++LIB_SONAME=.
+ LIB_SUFFIX=.dylib
+ fi
+ fi
+ 
+ AC_SUBST(LIB_PREFIX)
++AC_SUBST(LIB_SONAME)
+ AC_SUBST(LIB_SUFFIX)
+ 
+ 
+@@ -85,23 +97,39 @@
+ AC_SUBST(GTK_SHARP_CFLAGS)
+ AC_SUBST(GTK_SHARP_LIBS)
+ 
+-dnl Find Gtk#
++dnl Find GAPI
+ PKG_CHECK_MODULES(GAPI, gapi-2.0 >= 1.9.0)
++gapidir=`$PKG_CONFIG --variable=gapidir gtk-sharp-2.0`
++AC_SUBST(gapidir)
+ 
+ AC_PATH_PROG(GACUTIL, gacutil, no)
+ if test "x$GACUTIL" = "xno" ; then
+         AC_MSG_ERROR([No gacutil tool found])
+ fi
++AC_SUBST(GACUTIL)
+ 
+ winbuild=no
+ case "$host" in
+-       *-*-mingw*|*-*-cygwin*)
++       *-*-mingw*)
+                winbuild=yes
+                ;;
+ esac
+ AM_CONDITIONAL(WINBUILD, test x$winbuild = xyes)
+ 
+-AC_SUBST(GACUTIL)
++
++AC_PATH_PROG(MDASSEMBLER, mdassembler, no)
++AC_PATH_PROG(MONODOCER, monodocer, no)
++if test "x$MONODOCER" = "xno" -o "x$MDASSEMBLER" = "xno"; then
++  enable_monodoc=no
++  doc_sources_dir=
++else
++  enable_monodoc=yes
++  doc_sources_dir="`pkg-config --variable=sourcesdir monodoc`"
++fi
++AC_SUBST(MDASSEMBLER)
++AC_SUBST(MONODOCER)
++AM_CONDITIONAL(ENABLE_MONODOC, test "x$enable_monodoc" = "xyes")
++
+ 
+ AC_OUTPUT([
+ Makefile
+@@ -109,4 +137,6 @@
+ gtkspell/Makefile
+ gtkspell/AssemblyInfo.cs
+ gtkspell-sharp-2.0.pc
++sample/Makefile
++docs/Makefile
+ ])
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/docs/Makefile.am src/gtkspell-sharp/docs/Makefile.am
+--- origsrc/gtkspell-sharp/docs/Makefile.am	1969-12-31 18:00:00.000000000 -0600
++++ src/gtkspell-sharp/docs/Makefile.am	2006-08-13 19:58:59.358875000 -0500
+@@ -0,0 +1,35 @@
++UPDATER = $(MONODOCER) -path:en -assembly:../gtkspell/gtkspell-sharp.dll
++
++if ENABLE_MONODOC
++SOURCESDIR=$(prefix)/lib/monodoc/sources
++TARGETS=gtkspell-sharp-docs.zip gtkspell-sharp-docs.tree gtkspell-sharp-docs.source
++else
++SOURCESDIR=$(datadir)
++TARGETS=
++endif
++
++monodocdir=$(SOURCESDIR)
++monodoc_DATA=$(TARGETS)
++
++assemble: gtkspell-sharp-docs.zip gtkspell-sharp-docs.tree
++
++gtkspell-sharp-docs.zip gtkspell-sharp-docs.tree: $(srcdir)/en/*.xml $(srcdir)/en/*/*.xml
++	$(MDASSEMBLER) --ecma $(srcdir)/en -o gtkspell-sharp-docs
++
++update:
++	$(UPDATER)
++
++update-delete: get-assemblies
++	$(UPDATER) --delete
++
++CLEANFILES = gtkspell-sharp-docs.zip gtkspell-sharp-docs.tree
++
++EXTRA_DIST =			\
++	gtkspell-sharp-docs.source README
++
++dist-hook:
++	mkdir -p $(distdir)/en
++	cp $(srcdir)/en/*.xml $(distdir)/en/
++	mkdir -p $(distdir)/en/GtkSpell
++	cp $(srcdir)/en/GtkSpell/*.xml $(distdir)/en/GtkSpell
++
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/docs/en/GtkSpell/Error.xml src/gtkspell-sharp/docs/en/GtkSpell/Error.xml
+--- origsrc/gtkspell-sharp/docs/en/GtkSpell/Error.xml	1969-12-31 18:00:00.000000000 -0600
++++ src/gtkspell-sharp/docs/en/GtkSpell/Error.xml	2006-08-13 19:58:22.483875000 -0500
+@@ -0,0 +1,26 @@
++<Type Name="Error" FullName="GtkSpell.Error">
++  <TypeSignature Language="C#" Value="public enum Error" />
++  <AssemblyInfo>
++    <AssemblyName>gtkspell-sharp</AssemblyName>
++    <AssemblyVersion>2.0.0.0</AssemblyVersion>
++  </AssemblyInfo>
++  <Base>
++    <BaseTypeName>System.Enum</BaseTypeName>
++  </Base>
++  <Members>
++    <Member MemberName="Backend">
++      <MemberSignature Language="C#" Value="Backend" />
++      <MemberType>Field</MemberType>
++      <ReturnValue>
++        <ReturnType>GtkSpell.Error</ReturnType>
++      </ReturnValue>
++      <Docs>
++        <summary>To be added.</summary>
++      </Docs>
++    </Member>
++  </Members>
++  <Docs>
++    <summary>To be added.</summary>
++    <remarks>To be added.</remarks>
++  </Docs>
++</Type>
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/docs/en/GtkSpell/SpellCheck.xml src/gtkspell-sharp/docs/en/GtkSpell/SpellCheck.xml
+--- origsrc/gtkspell-sharp/docs/en/GtkSpell/SpellCheck.xml	1969-12-31 18:00:00.000000000 -0600
++++ src/gtkspell-sharp/docs/en/GtkSpell/SpellCheck.xml	2006-08-13 19:58:22.452625000 -0500
+@@ -0,0 +1,140 @@
++<Type Name="SpellCheck" FullName="GtkSpell.SpellCheck">
++  <TypeSignature Language="C#" Value="public class SpellCheck : GLib.Opaque" />
++  <AssemblyInfo>
++    <AssemblyName>gtkspell-sharp</AssemblyName>
++    <AssemblyVersion>2.0.0.0</AssemblyVersion>
++  </AssemblyInfo>
++  <Base>
++    <BaseTypeName>GLib.Opaque</BaseTypeName>
++  </Base>
++  <Interfaces />
++  <Members>
++    <Member MemberName=".ctor">
++      <MemberSignature Language="C#" Value="public SpellCheck (IntPtr raw);" />
++      <MemberType>Constructor</MemberType>
++      <Parameters>
++        <Parameter Name="raw" Type="System.IntPtr" />
++      </Parameters>
++      <Docs>
++        <param name="raw">To be added.</param>
++        <summary>To be added.</summary>
++        <remarks>To be added.</remarks>
++      </Docs>
++    </Member>
++    <Member MemberName=".ctor">
++      <MemberSignature Language="C#" Value="public SpellCheck (Gtk.TextView view, string lang);" />
++      <MemberType>Constructor</MemberType>
++      <Parameters>
++        <Parameter Name="view" Type="Gtk.TextView" />
++        <Parameter Name="lang" Type="System.String" />
++      </Parameters>
++      <Docs>
++        <param name="view">To be added.</param>
++        <param name="lang">To be added.</param>
++        <summary>To be added.</summary>
++        <remarks>To be added.</remarks>
++      </Docs>
++    </Member>
++    <Member MemberName="Attach">
++      <MemberSignature Language="C#" Value="public static void Attach (Gtk.TextView view);" />
++      <MemberType>Method</MemberType>
++      <ReturnValue>
++        <ReturnType>System.Void</ReturnType>
++      </ReturnValue>
++      <Parameters>
++        <Parameter Name="view" Type="Gtk.TextView" />
++      </Parameters>
++      <Docs>
++        <param name="view">To be added.</param>
++        <summary>To be added.</summary>
++        <remarks>To be added.</remarks>
++      </Docs>
++    </Member>
++    <Member MemberName="Init">
++      <MemberSignature Language="C#" Value="public static int Init ();" />
++      <MemberType>Method</MemberType>
++      <ReturnValue>
++        <ReturnType>System.Int32</ReturnType>
++      </ReturnValue>
++      <Parameters />
++      <Docs>
++        <summary>To be added.</summary>
++        <returns>To be added.</returns>
++        <remarks>To be added.</remarks>
++      </Docs>
++    </Member>
++    <Member MemberName="Detach">
++      <MemberSignature Language="C#" Value="public void Detach ();" />
++      <MemberType>Method</MemberType>
++      <ReturnValue>
++        <ReturnType>System.Void</ReturnType>
++      </ReturnValue>
++      <Parameters />
++      <Docs>
++        <summary>To be added.</summary>
++        <remarks>To be added.</remarks>
++      </Docs>
++    </Member>
++    <Member MemberName="ErrorQuark">
++      <MemberSignature Language="C#" Value="public static int ErrorQuark ();" />
++      <MemberType>Method</MemberType>
++      <ReturnValue>
++        <ReturnType>System.Int32</ReturnType>
++      </ReturnValue>
++      <Parameters />
++      <Docs>
++        <summary>To be added.</summary>
++        <returns>To be added.</returns>
++        <remarks>To be added.</remarks>
++      </Docs>
++    </Member>
++    <Member MemberName="SetLanguage">
++      <MemberSignature Language="C#" Value="public bool SetLanguage (string lang);" />
++      <MemberType>Method</MemberType>
++      <ReturnValue>
++        <ReturnType>System.Boolean</ReturnType>
++      </ReturnValue>
++      <Parameters>
++        <Parameter Name="lang" Type="System.String" />
++      </Parameters>
++      <Docs>
++        <param name="lang">To be added.</param>
++        <summary>To be added.</summary>
++        <returns>To be added.</returns>
++        <remarks>To be added.</remarks>
++      </Docs>
++    </Member>
++    <Member MemberName="RecheckAll">
++      <MemberSignature Language="C#" Value="public void RecheckAll ();" />
++      <MemberType>Method</MemberType>
++      <ReturnValue>
++        <ReturnType>System.Void</ReturnType>
++      </ReturnValue>
++      <Parameters />
++      <Docs>
++        <summary>To be added.</summary>
++        <remarks>To be added.</remarks>
++      </Docs>
++    </Member>
++    <Member MemberName="GetFromTextView">
++      <MemberSignature Language="C#" Value="public static GtkSpell.SpellCheck GetFromTextView (Gtk.TextView view);" />
++      <MemberType>Method</MemberType>
++      <ReturnValue>
++        <ReturnType>GtkSpell.SpellCheck</ReturnType>
++      </ReturnValue>
++      <Parameters>
++        <Parameter Name="view" Type="Gtk.TextView" />
++      </Parameters>
++      <Docs>
++        <param name="view">To be added.</param>
++        <summary>To be added.</summary>
++        <returns>To be added.</returns>
++        <remarks>To be added.</remarks>
++      </Docs>
++    </Member>
++  </Members>
++  <Docs>
++    <summary>To be added.</summary>
++    <remarks>To be added.</remarks>
++  </Docs>
++</Type>
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/docs/en/GtkSpell.xml src/gtkspell-sharp/docs/en/GtkSpell.xml
+--- origsrc/gtkspell-sharp/docs/en/GtkSpell.xml	1969-12-31 18:00:00.000000000 -0600
++++ src/gtkspell-sharp/docs/en/GtkSpell.xml	2006-08-13 19:58:22.468250000 -0500
+@@ -0,0 +1,6 @@
++<Namespace Name="GtkSpell">
++  <Docs>
++    <summary>To be added.</summary>
++    <remarks>To be added.</remarks>
++  </Docs>
++</Namespace>
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/docs/en/index.xml src/gtkspell-sharp/docs/en/index.xml
+--- origsrc/gtkspell-sharp/docs/en/index.xml	1969-12-31 18:00:00.000000000 -0600
++++ src/gtkspell-sharp/docs/en/index.xml	2006-08-13 19:58:22.499500000 -0500
+@@ -0,0 +1,14 @@
++<Overview>
++  <Assemblies>
++    <Assembly Name="gtkspell-sharp" Version="2.0.0.0" />
++  </Assemblies>
++  <Remarks>To be added.</Remarks>
++  <Copyright>To be added.</Copyright>
++  <Types>
++    <Namespace Name="GtkSpell">
++      <Type Name="SpellCheck" />
++      <Type Name="Error" />
++    </Namespace>
++  </Types>
++  <Title>gtkspell-sharp</Title>
++</Overview>
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/docs/gtkspell-sharp-docs.source src/gtkspell-sharp/docs/gtkspell-sharp-docs.source
+--- origsrc/gtkspell-sharp/docs/gtkspell-sharp-docs.source	1969-12-31 18:00:00.000000000 -0600
++++ src/gtkspell-sharp/docs/gtkspell-sharp-docs.source	2006-08-13 19:57:38.999500000 -0500
+@@ -0,0 +1,4 @@
++<?xml version="1.0"?>
++<monodoc>
++  <source provider="ecma" basefile="gtkspell-sharp-docs" path="various" />
++</monodoc>
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/gtkspell/Makefile.am src/gtkspell-sharp/gtkspell/Makefile.am
+--- origsrc/gtkspell-sharp/gtkspell/Makefile.am	2006-04-10 23:34:48.000000000 -0500
++++ src/gtkspell-sharp/gtkspell/Makefile.am	2006-08-13 19:12:25.111375000 -0500
+@@ -31,10 +31,10 @@
+ $(API): $(srcdir)/$(RAW_API) $(srcdir)/$(METADATA)
+ 	cp $(srcdir)/$(RAW_API) $(API)
+ 	chmod u+w $(API)
+-	$(FIXUP) --api=$(srcdir)/$(API) --metadata=$(srcdir)/$(METADATA)
++	$(FIXUP) --api=$(API) --metadata=$(srcdir)/$(METADATA)
+ 
+ generated-stamp: $(API)
+-	 $(CODEGEN) --generate $(srcdir)/$(API) $(GTK_SHARP_CFLAGS) --outdir=generated --customdir=$(srcdir) --assembly-name=gtkspell-sharp && touch generated-stamp
++	 $(CODEGEN) --generate $(API) $(GTK_SHARP_CFLAGS) --outdir=generated --customdir=$(srcdir) --assembly-name=gtkspell-sharp && touch generated-stamp
+ 
+ gtkspell-sharp.snk: $(top_srcdir)/gtkspell-sharp.snk
+ 	cp $(top_srcdir)/gtkspell-sharp.snk .
+@@ -46,6 +46,8 @@
+ install-data-local:
+ 	echo "$(GACUTIL) /i $(ASSEMBLY) /f /package gtkspell-sharp-2.0 /root $(DESTDIR)$(libdir)";  \
+         $(GACUTIL) /i $(ASSEMBLY) /f /package gtkspell-sharp-2.0 /root $(DESTDIR)$(libdir) || exit 1;
++	$(mkinstalldirs) $(DESTDIR)$(gapidir)
++	$(INSTALL_DATA) $(API) $(DESTDIR)$(gapidir)
+ 
+ uninstall-local:
+ 	echo "$(GACUTIL) /u $(ASSEMBLY_NAME) /package gtkspell-sharp-2.0 /root $(DESTDIR)$(libdir)"; \
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/gtkspell/gtkspell-sharp.dll.config.in src/gtkspell-sharp/gtkspell/gtkspell-sharp.dll.config.in
+--- origsrc/gtkspell-sharp/gtkspell/gtkspell-sharp.dll.config.in	2005-03-24 00:27:20.000000000 -0600
++++ src/gtkspell-sharp/gtkspell/gtkspell-sharp.dll.config.in	2006-08-13 19:33:33.170375000 -0500
+@@ -1,7 +1,7 @@
+ <configuration>
+-  <dllmap dll="libglib-2.0-0.dll" target="libglib-2.0@LIB_PREFIX@.0@LIB_SUFFIX@"/>
+-  <dllmap dll="libgobject-2.0-0.dll" target="libgobject-2.0@LIB_PREFIX@.0@LIB_SUFFIX@"/>
+-  <dllmap dll="libatk-1.0-0.dll" target="libatk-1.0@LIB_PREFIX@.0@LIB_SUFFIX@"/>
+-  <dllmap dll="libgtk-win32-2.0-0.dll" target="libgtk-x11-2.0@LIB_PREFIX@.0@LIB_SUFFIX@"/>
+-  <dllmap dll="libgtkspell.dll" target="libgtkspell@LIB_PREFIX@.0@LIB_SUFFIX@"/>
++  <dllmap dll="libglib-2.0-0.dll" target="@LIB_PREFIX@glib-2.0@LIB_SONAME@0@LIB_SUFFIX@"/>
++  <dllmap dll="libgobject-2.0-0.dll" target="@LIB_PREFIX@gobject-2.0@LIB_SONAME@0@LIB_SUFFIX@"/>
++  <dllmap dll="libatk-1.0-0.dll" target="@LIB_PREFIX@atk-1.0@LIB_SONAME@0@LIB_SUFFIX@"/>
++  <dllmap dll="libgtk-win32-2.0-0.dll" target="@LIB_PREFIX@gtk-x11-2.0@LIB_SONAME@0@LIB_SUFFIX@"/>
++  <dllmap dll="libgtkspell.dll" target="@LIB_PREFIX@gtkspell@LIB_SONAME@0@LIB_SUFFIX@"/>
+ </configuration>
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/sample/Makefile src/gtkspell-sharp/sample/Makefile
+--- origsrc/gtkspell-sharp/sample/Makefile	2005-03-24 00:27:20.000000000 -0600
++++ src/gtkspell-sharp/sample/Makefile	1969-12-31 18:00:00.000000000 -0600
+@@ -1,7 +0,0 @@
+-
+-all:
+-	mcs -pkg:gtkspell-sharp-2.0 TestGtkSpell.cs -out:TestGtkSpell.exe
+-
+-
+-clean:
+-	rm TestGtkSpell.exe
+diff -urN -x CYGWIN-PATCHES -x 'aclocal.m4*' -x ltmain.sh -x 'config.*' -x depcomp -x install-sh -x missing -x mkinstalldirs -x autom4te.cache -x '*compile' -x 'intltool*.in' -x 'xml-i18n-*.in' -x '*.pyc' -x '*.mo' -x '*.gmo' -x ABOUT-NLS -x Makevars.template -x COPYING -x INSTALL -x '*.orig' -x '*.rej' -x '*~' -x '*.temp' -x texinfo.tex -x ylwrap -x 'Makefile.in*' -x configure -x gnome-doc-utils.make -x intltool.m4 -x omf.make -x xmldocs.make origsrc/gtkspell-sharp/sample/Makefile.am src/gtkspell-sharp/sample/Makefile.am
+--- origsrc/gtkspell-sharp/sample/Makefile.am	1969-12-31 18:00:00.000000000 -0600
++++ src/gtkspell-sharp/sample/Makefile.am	2006-08-13 19:51:40.995625000 -0500
+@@ -0,0 +1,9 @@
++TARGETS = TestGtkSpell.exe
++
++noinst_SCRIPTS = $(TARGETS)
++CLEANFILES = $(TARGETS)
++
++TestGtkSpell.exe: TestGtkSpell.cs
++	$(MCS) /out:$@ /r:../gtkspell/gtkspell-sharp.dll /pkg:gtk-sharp-2.0 $<
++
++EXTRA_DIST = TestGtkSpell.cs

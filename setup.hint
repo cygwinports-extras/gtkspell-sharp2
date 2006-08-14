@@ -1,0 +1,4 @@
+category: Dotnet Gnome
+requires: cygwin gtk-sharp2 gtkspell mono
+sdesc: "Mono GtkSpell bindings"
+ldesc: "Mono GtkSpell bindings"
